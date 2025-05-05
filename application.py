@@ -29,7 +29,7 @@ def log_to_sql(phrase, result):
                 )
                 conn.commit()
     except Exception as e:
-        print("Logging failed:", e)
+        print("Logging failed!:", e)
 
 @app.route("/", methods=["GET", "POST"])
 def calculator():
