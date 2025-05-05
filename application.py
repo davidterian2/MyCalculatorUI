@@ -6,7 +6,7 @@ import struct
 
 app = Flask(__name__)
 
-AZURE_FUNCTION_URL = "http://4.149.153.91/api/CalculateCouble" # Replace with your Azure Function URL
+AZURE_FUNCTION_URL = "http://4.149.153.91/api/CalculateCouble" # Replace with your Azure Function URL!
 
 SQL_SERVER = "calculatorui-server.database.windows.net"
 SQL_DATABASE = "calculatorui-database"
