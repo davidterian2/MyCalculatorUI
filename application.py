@@ -34,7 +34,7 @@ def log_to_sql(phrase, result):
 @app.route("/", methods=["GET", "POST"])
 def calculator():
     result = ""
-    if request.method == "POST":
+    if request.method == "POST":#post
         try:
             num1 = request.form["num1"]
             num2 = request.form["num2"]
