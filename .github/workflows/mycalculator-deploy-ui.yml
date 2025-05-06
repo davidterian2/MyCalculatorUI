@@ -32,7 +32,7 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'CalculatorUI'  # Azure Web App name
-          slot-name: 'production'
+          slot-name: 'development'
           resource-group-name: 'myapp-rg'
           package: '.'
 
