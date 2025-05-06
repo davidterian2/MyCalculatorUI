@@ -12,20 +12,30 @@ SQL_SERVER = "calculatorui-server.database.windows.net"
 SQL_DATABASE = "calculatorui-database"
 SQL_DRIVER = "ODBC Driver 18 for SQL Server"  # Adjust if needed
 
-def log_to_sql(phrase, result):
+def log_to_sql(caller, phrase, result):
     try:
-        credential = DefaultAzureCredential()
-        token = credential.get_token("https://database.windows.net/.default")
-        access_token = bytes(token.token, "utf-8")
-        exptoken = struct.pack("=i", len(access_token)) + access_token
+      #  credential = DefaultAzureCredential()
+      # token = credential.get_token("https://database.windows.net/.default")
+      # access_token = bytes(token.token, "utf-8")
+      # exptoken = struct.pack("=i", len(access_token)) + access_token
 
-        conn_str = f"DRIVER={{{SQL_DRIVER}}};SERVER={SQL_SERVER};DATABASE={SQL_DATABASE};Authentication=ActiveDirectoryMsi"
+        #conn_str = f"DRIVER={{{SQL_DRIVER}}};SERVER={SQL_SERVER};DATABASE={SQL_DATABASE};Authentication=ActiveDirectoryMsi"
 
-        with pyodbc.connect(conn_str, attrs_before={1256: exptoken}) as conn:
+        conn_str = (
+                   "DRIVER={ODBC Driver 18 for SQL Server};"
+                   "SERVER=calculatorui-server.database.windows.net;"
+                    "DATABASE=calculatorui-database;"
+                    "UID=CalculatorUser;"
+                    "PWD=&Hripsime1961;"
+                    "Encrypt=yes;TrustServerCertificate=no;"
+)
+
+       # with pyodbc.connect(conn_str, attrs_before={1256: exptoken}) as conn:
+        with pyodbc.connect(conn_str) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    "INSERT INTO CalculationLog (Phrase, Result) VALUES (?, ?)",
-                    phrase, result
+                    "INSERT INTO dbo.CalculationLog  VALUES (?, ?, ?, getdate())",
+                    caller, phrase, result
                 )
                 conn.commit()
     except Exception as e:
@@ -36,6 +46,14 @@ def calculator():
     result = ""
     if request.method == "POST":#post
         try:
+            user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+           # user_agent = request.headers.get('User-Agent')
+            caller = f"Your IP: {user_ip}"
+
+            auth = request.authorization
+            if auth:
+                Caller = auth.username
+
             num1 = request.form["num1"]
             num2 = request.form["num2"]
             operation = request.form["operation"]
@@ -54,14 +72,17 @@ def calculator():
             response = requests.post(AZURE_FUNCTION_URL, data={"phrase": phrase})
             if response.ok:
                 result = response.text
+                # Log to Azure SQL
+                log_to_sql(caller, phrase, result)
             else:
                 result = f"Error from Azure Function: {response.status_code}"
+                # Log to Azure SQL
+                log_to_sql(caller, phrase, result)
 
         except Exception as e:
             result = f"Error: {str(e)}"
 
-         # Log to Azure SQL
-        log_to_sql(phrase, result)
+         
 
     return f"""
     <html>
